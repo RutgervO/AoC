@@ -2,51 +2,38 @@
 
 from parse import *
 
+from collections import namedtuple
+
 
 def part1(filename):
-    print(f"Part 1, reading {filename}")
     with open(filename, "rt") as f:
         lines = [_.strip() for _ in f]
 
-    print(f"{len(lines)} read")
+    print(f"Part 1, {filename}, {len(lines)} lines")
 
-    status = (0,0), 90  # position 0,0, pointing east
+    Pos = namedtuple('Position', ['x', 'y', 'angle'])
 
-    def move(status, op, value):
-        (sx, sy), sa = status
-        directions = {
-            'N': (0, -1),
-            'S': (0, 1),
-            'E': (1, 0),
-            'W': (-1, 0),
-        }
-        dx, dy = directions[op]
-        sx += dx * value
-        sy += dy * value
-        return (sx, sy), sa
+    directions = {  # (x, y) for moves and angles, positive or negative number for rotation
+        'N': (0, -1),
+        'S': (0, 1),
+        'E': (1, 0),
+        'W': (-1, 0),
+        0: (0, -1),
+        180: (0, 1),
+        90: (1, 0),
+        270: (-1, 0),
+        'L': -1,
+        'R': 1,
+    }
+
+    def move(pos, op, value):
+        return Pos(pos.x + directions[op][0] * value, pos.y + directions[op][1] * value, pos.angle)
         
-    def rotate(status, op, value):
-        (sx, sy), sa = status
-        directions = {
-            'L': -1,
-            'R': 1,
-        }
-        sa = (sa + directions[op] * value) % 360
-        return (sx, sy), sa
-    
-    def forward(status, op, value):
-        (sx, sy), sa = status
-        directions = {
-            0: (0, -1),
-            180: (0, 1),
-            90: (1, 0),
-            270: (-1, 0),
-        }
-        dx, dy = directions[sa]
-        sx += dx * value
-        sy += dy * value
-        return (sx, sy), sa
+    def rotate(pos, op, value):
+        return Pos(pos.x, pos.y, (pos.angle + directions[op] * value) % 360)
 
+    def forward(pos, op, value):
+        return Pos(pos.x + directions[pos.angle][0] * value, pos.y + directions[pos.angle][1] * value, pos.angle)
 
     ops = {
        'N': move,
@@ -58,61 +45,49 @@ def part1(filename):
        'F': forward,
     }
 
+    pos = Pos(0, 0, 90)  # position 0,0, pointing east
+    print(f"Start: {pos}")
+
     for line in lines:
         p = parse("{op:l}{value:d}", line)
-        if not p:
-            printf("Error parsing {line}")
-        status = ops[p['op']](status, p['op'], p['value'])
+        pos = ops[p['op']](pos, p['op'], p['value'])
+        # print(f'Step:  {line:10s} {pos}')
 
-    (sx, sy), sa = status
-    print(f'End status: pos:{sx},{sy} angle:{sa} manhattan: {abs(sx) + abs(sy)}')
-    print()
+    print(f'End:   {pos} manhattan: {abs(pos.x) + abs(pos.y)}\n')
 
 
 def part2(filename):
-    print(f"Part 2, reading {filename}")
     with open(filename, "rt") as f:
         lines = [_.strip() for _ in f]
 
-    print(f"{len(lines)} read")
+    print(f"Part 2, {filename}, {len(lines)} lines")
 
-    status = (0,0), (10, -1)  # position 0,0, waypoint at 10,-1
-    
+    Pos = namedtuple('Position', ['x', 'y', 'wx', 'wy']) # (x,y) for boat and relative (wx,wy) for waypoint
 
-    def move(status, op, value):
-        (sx, sy), (wx, wy) = status
-        directions = {
-            'N': (0, -1),
-            'S': (0, 1),
-            'E': (1, 0),
-            'W': (-1, 0),
-        }
-        dx, dy = directions[op]
-        wx += dx * value
-        wy += dy * value
-        return (sx, sy), (wx, wy)
+    directions = {
+        'N': (0, -1),
+        'S': (0, 1),
+        'E': (1, 0),
+        'W': (-1, 0),
+        'L': -1,
+        'R': 1,
+    }
+
+    def move(pos, op, value):
+        return Pos(pos.x, pos.y, pos.wx + directions[op][0] * value, pos.wy + directions[op][1] * value)
         
-    def rotate(status, op, value):
-        (sx, sy), (wx, wy) = status
-        directions = {
-            'L': -1,
-            'R': 1,
-        }
+    def rotate(pos, op, value):
         angle = (value * directions[op]) % 360
         angles = {
-            0: ((sx, sy), (wx, wy)),
-            90: ((sx, sy), (-wy, wx)),
-            180: ((sx, sy), (-wx, -wy)),
-            270: ((sx, sy), (wy, -wx))
+            0:  (pos.wx, pos.wy),
+            90: (-pos.wy, pos.wx),
+            180: (-pos.wx, -pos.wy),
+            270: (pos.wy, -pos.wx),
         }
-        return angles[angle]
+        return Pos(pos.x, pos.y, angles[angle][0], angles[angle][1])
     
-    def forward(status, op, value):
-        (sx, sy), (wx, wy) = status
-
-        sx += wx * value
-        sy += wy * value
-        return (sx, sy), (wx, wy)
+    def forward(pos, op, value):
+        return Pos(pos.x + pos.wx * value, pos.y + pos.wy * value, pos.wx, pos.wy)
 
 
     ops = {
@@ -125,17 +100,15 @@ def part2(filename):
        'F': forward,
     }
 
+    pos = Pos(0, 0, 10, -1)  # position 0,0, waypoint at 10,-1
+    print(f"Start: {pos}")
+    
     for line in lines:
         p = parse("{op:l}{value:d}", line)
-        if not p:
-            printf("Error parsing {line}")
-        status = ops[p['op']](status, p['op'], p['value'])
-        # (sx, sy), (wx, wy) = status
-        # print(f'{line} yields status: pos:{sx},{sy} waypoint:{wx},{wy}')
+        pos = ops[p['op']](pos, p['op'], p['value'])
+        # print(f'Step:  {line:10s} {pos}')
 
-    (sx, sy), (wx, wy) = status
-    print(f'End status: pos:{sx},{sy} waypoint:{wx},{wy} manhattan: {abs(sx) + abs(sy)}')
-    print()
+    print(f'End:   {pos} manhattan: {abs(pos.x) + abs(pos.y)}\n')
 
 
 def main():
