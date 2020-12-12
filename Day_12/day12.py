@@ -76,7 +76,7 @@ def part2(filename):
 
     print(f"{len(lines)} read")
 
-    status = (0,0), (10, -1)  # position 0,0, waipoint at 10,-1
+    status = (0,0), (10, -1)  # position 0,0, waypoint at 10,-1
     
 
     def move(status, op, value):
