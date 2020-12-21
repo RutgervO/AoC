@@ -75,7 +75,7 @@ def calculate(filename, part=1, verbose=False):
                 count += 1
                 suspects -= singles
     
-    result=",".join(["".join(combinations[allergen]) for allergen in sorted(combinations)])
+    result=",".join([allergen.pop() for _, allergen in sorted(combinations.items())])
     print(f"{result=}")
     return result
 
