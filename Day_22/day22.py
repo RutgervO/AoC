@@ -14,10 +14,8 @@ def calculate(filename, part=1, verbose=False):
 
     print(f"\nPart {part}, {filename}, {len(lines)} lines")
     
-    hands = []
     line = lines.index("")
-    hands.append(list(map(int, lines[1:line])))
-    hands.append(list(map(int, lines[line+2:])))
+    hands = [list(map(int, lines[1:line])), list(map(int, lines[line+2:]))]
 
     debug(f"{hands=}")
     
@@ -54,20 +52,12 @@ def calculate(filename, part=1, verbose=False):
     return result
 
 
-def test(value, func, *args, **kwargs):
-    result = func(*args, **kwargs)
-    if result == value:
-        print(f"\nCORRECT! {func.__name__} {args} => {result}")
-    else:
-        print(f"\nWRONG!   {func.__name__} {args} => {result} but should be {value}")
-
-
 if __name__ == '__main__':
-    test(306, calculate, 'demo-input', part=1, verbose=False)
+    assert(calculate('demo-input', part=1) == 306)
     calculate('input', part=1)
 
-    test(291, calculate, 'demo-input', part=2, verbose=False)
-    calculate('input', part=2, verbose=False)
+    assert(calculate('demo-input', part=2) == 291)
+    calculate('input', part=2)
 
 
 # vim: et:ai:sw=4:ts=4
