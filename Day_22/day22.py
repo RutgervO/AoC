@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import copy
-
 
 def calculate(filename, part=1, verbose=False):
 
@@ -20,15 +18,17 @@ def calculate(filename, part=1, verbose=False):
     debug(f"{hands=}")
     
     def recursive_combat(hands, part):
-        memory = []
+        memory = set()
 
         debug(f"Game on! {hands=}")
 
         while all(len(hand) > 0 for hand in hands):
-            if part == 2 and hands in memory:
-                debug(f"Recursion limit! Player 1 wins")
-                return 0
-            memory.append(copy.deepcopy(hands))
+            if part == 2:
+                tupled = tuple([tuple(hands[0]), tuple(hands[1])])
+                if tupled in memory:
+                    debug(f"Recursion limit! Player 1 wins")
+                    return 0
+                memory.add(tupled)
 
             dealt = [ hand.pop(0) for hand in hands ]
 
