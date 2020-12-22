@@ -24,7 +24,7 @@ def calculate(filename, part=1, verbose=False):
 
         while all(len(hand) > 0 for hand in hands):
             if part == 2:
-                tupled = tuple([tuple(hands[0]), tuple(hands[1])])
+                tupled = tuple(map(tuple, hands))
                 if tupled in memory:
                     debug(f"Recursion limit! Player 1 wins")
                     return 0
